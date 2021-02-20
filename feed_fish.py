@@ -1,25 +1,22 @@
 # Feed The Fish - Manual Control - Driving and Firing
 # Bill Harvey 16 Feb 2021 - Not tested yet
+# Last update 20 Feb 2021
 
 from gpiozero import Motor
 from time import sleep
 from approxeng.input.selectbinder import ControllerResource # Import Approx Eng Controller libraries
 import ThunderBorg3 as ThunderBorg
 import UltraBorg3 as UltraBorg
-import os
+#import os
+import sys
 
 global launcher
+global TB
 launcher = False
-
-# Start the UltraBorg Servo Board
-UB = UltraBorg.UltraBorg()
-UB.Init()
-
-TB = ThunderBorg()
 
 # Setup the ThunderBorg
 TB = ThunderBorg.ThunderBorg()
-#TB.i2cAddress = 0x15                  # Uncomment and change the value if you have changed the board address
+#TB.i2cAddress = 0x15                 # Uncomment and change the value if you have changed the board address
 TB.Init()
 if not TB.foundChip:
     boards = ThunderBorg.ScanForThunderBorg()
@@ -29,7 +26,7 @@ if not TB.foundChip:
         print("No ThunderBorg at address %02X, but we did find boards:" % (TB.i2cAddress))
         for board in boards:
             print("    %02X (%d) " % (board, board))
-        print("If you need to change the I�C address change the setup line so it is correct, e.g.")
+        print("If you need to change the I2C address change the setup line so it is correct, e.g.")
         print("TB.i2cAddress = 0x%02X" % (boards[0]))
     sys.exit()
 # Ensure the communications failsafe has been enabled!
@@ -43,21 +40,20 @@ if not failsafe:
     print("Board %02X failed to report in failsafe mode!" % (TB.i2cAddress))
     sys.exit()
 
-# Start the UltraBorg
-UB = UltraBorg.UltraBorg()      # Create a new UltraBorg object
-UB.Init()                       # Set the board up (checks the board is connected)
-
-# Setup and wait for the joystick to become available
 TB.MotorsOff()
 TB.SetLedShowBattery(False)
 TB.SetLeds(0,0,1)
+
+# Start the UltraBorg
+UB = UltraBorg.UltraBorg()      # Create a new UltraBorg object
+UB.Init()                       # Set the board up (checks the board is connected)
 
 # Setup Nerf Launcher motor variable (BCM numbering system)
 
 motor1 = Motor(27, 22)
 motor2 = Motor(23, 24)
 
-def start_launcher_motors()
+def start_launcher_motors():
     motor1.forward()
     motor2.forward()
 
@@ -75,11 +71,9 @@ def main():
     while True:
         try:
             try:
-                with ControllerResource as joystick:_x
+                with ControllerResource as joystick:
                     print("Found a joystick and connected")
                     while joystick.connected:
-                        # Do stuff here
-                        # Read the left analogue joystick for driving
                         left_y = joystick["ly"]
                         right_y = joystick["ry"]
                         driveLeft = left_y
@@ -88,28 +82,28 @@ def main():
                         TB.SetMotor1(driveRight)
                         TB.SetMotor2(driveLeft)
 
-
                         # Read the buttons to determine Nerf launcher controls
                         presses = joystick.check_presses()
-                        if presses["square"]
-                            # Start launcher motors
+                        if presses["square"]:
                             print("Square Button")
-                            launcher = True
-                            start_launcher_motors()
+                            # Start launcher motors
 
-                        if presses["Cross"]
+                            launcher = "yes"
+                            start_launcher_motors()
                             # Fire NERF
                             # Need to add some error checking here to prevent firing if motors are nut turning?
-                            if launcher:
+
+                        if presses["Cross"]:
+                            print("Cross Pressed")
+                            if launcher == "yes":
                                 fire()
                             else:
                                 print("Motors aren't running, press 'Square' to start")
 
-                        if presses["Triangle"]
+                        if presses["Triangle"]:
                             # Stop launcher motors
-                            launcher = False
+                            launcher = "No"
                             stop_launcher_motors()
-
                 # Joystick disconnected.....
                 print("Connection to joystick lost")
                 stop_launcher_motors()
@@ -121,7 +115,6 @@ def main():
                 # Set LEDs blue
                 TB.SetLeds(0,0,1)
                 sleep(1.0)
-
         except KeyboardInterrupt:
             # CTRL+C exit, give up
             print("\nUser aborted")
