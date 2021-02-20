@@ -48,34 +48,46 @@ TB.SetLeds(0,0,1)
 UB = UltraBorg.UltraBorg()      # Create a new UltraBorg object
 UB.Init()                       # Set the board up (checks the board is connected)
 
+# Set servo to centre
+UB.SetServoPosition4(-0.02) #Test Servo positioning using ultra_gui.py to obtain start position and insert here
+
 # Setup Nerf Launcher motor variable (BCM numbering system)
 
 motor1 = Motor(27, 22)
 motor2 = Motor(23, 24)
 
 def start_launcher_motors():
+    print("Starting launcher Motors")
+    print("Press Circle to fire and Cross to stop")
     motor1.forward()
     motor2.forward()
 
 def fire():
     # Activate loading servo
-    UB.SetServoPosition4(0) #Test Servo positioning using ultra_gui.py to obtain start position and insert here
+    UB.SetServoPosition4(-0.02) #Test Servo positioning using ultra_gui.py to obtain start position and insert here
     sleep(0.5) # Insert loading time here
-    UB.SetServoPosition4(0)  # Test Servo positioning using ultra_gui.py to obtain loading position and insert here
+    UB.SetServoPosition4(-0.47)  # Test Servo positioning using ultra_gui.py to obtain loading position and insert here
+    sleep(0.5)
+    UB.SetServoPosition4(-0.02) #Test Servo positioning using ultra_gui.py to obtain start position and insert here
 
 def stop_launcher_motors():
+    print("Stopping launcher Motors")
     motor1.stop()
     motor2.stop()
 
 def main():
+    print("started main")
     while True:
         try:
             try:
-                with ControllerResource as joystick:
+                print("started try joystick")
+                with ControllerResource() as joystick:
                     print("Found a joystick and connected")
                     while joystick.connected:
                         left_y = joystick["ly"]
+                        #print("Left Joy")
                         right_y = joystick["ry"]
+                        #print("Right Joy")
                         driveLeft = left_y
                         driveRight = right_y
 
@@ -84,8 +96,8 @@ def main():
 
                         # Read the buttons to determine Nerf launcher controls
                         presses = joystick.check_presses()
-                        if presses["square"]:
-                            print("Square Button")
+                        if presses.square:
+                            print("Square pressed")
                             # Start launcher motors
 
                             launcher = "yes"
@@ -93,15 +105,16 @@ def main():
                             # Fire NERF
                             # Need to add some error checking here to prevent firing if motors are nut turning?
 
-                        if presses["Cross"]:
-                            print("Cross Pressed")
+                        elif presses.circle:
+                            print("Circle Pressed")
                             if launcher == "yes":
                                 fire()
                             else:
                                 print("Motors aren't running, press 'Square' to start")
 
-                        if presses["Triangle"]:
+                        elif presses.cross:
                             # Stop launcher motors
+                            print("Cross pressed")
                             launcher = "No"
                             stop_launcher_motors()
                 # Joystick disconnected.....
@@ -121,6 +134,8 @@ def main():
             TB.MotorsOff()
             TB.SetCommsFailsafe(False)
             TB.SetLeds(0,0,0)
+            motor1.stop()
+            motor2.stop()
             sys.exit()
 
 main()
