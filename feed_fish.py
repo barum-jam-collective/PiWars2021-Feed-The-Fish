@@ -117,6 +117,10 @@ def main():
                             print("Cross pressed")
                             launcher = "No"
                             stop_launcher_motors()
+                        
+                        # Quick pause
+                        sleep(0.01)
+                        
                 # Joystick disconnected.....
                 print("Connection to joystick lost")
                 stop_launcher_motors()
