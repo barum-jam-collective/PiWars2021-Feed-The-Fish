@@ -1,8 +1,8 @@
-# Feed The Fish - Manual Control - Driving and Firing
-# Bill Harvey 16 Feb 2021 - Not tested yet
+# Feed The Fish - Manual Control for driving and firing using DIY NERF launcher motors controlled using CamJam Motor Driver Board
+# Bill Harvey 16 Feb 2021
 # Last update 20 Feb 2021
 
-from gpiozero import Motor
+from gpiozero import Motor # Used for the launcher motors (not the driving motors)
 from time import sleep
 from approxeng.input.selectbinder import ControllerResource # Import Approx Eng Controller libraries
 import ThunderBorg3 as ThunderBorg
@@ -84,15 +84,15 @@ def main():
                 with ControllerResource() as joystick:
                     print("Found a joystick and connected")
                     while joystick.connected:
-                        left_y = joystick["ly"]
+                        left_y = joystick["ly"] # Driving control
                         #print("Left Joy")
-                        right_y = joystick["ry"]
+                        right_y = joystick["ry"] # Driving control
                         #print("Right Joy")
-                        driveLeft = left_y
-                        driveRight = right_y
+                        driveLeft = left_y # Driving control 
+                        driveRight = right_y # Driving control
 
-                        TB.SetMotor1(driveRight)
-                        TB.SetMotor2(driveLeft)
+                        TB.SetMotor1(driveRight) # Driving control
+                        TB.SetMotor2(driveLeft) # Driving control
 
                         # Read the buttons to determine Nerf launcher controls
                         presses = joystick.check_presses()
