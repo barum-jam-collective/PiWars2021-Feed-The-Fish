@@ -2,8 +2,7 @@
 # Bill Harvey 16 Feb 2021
 # Last update 18 May 2021
 
-from gpiozero import Motor
-from gpiozero import LED
+from gpiozero import PWMLED
 from time import sleep
 from approxeng.input.selectbinder import ControllerResource # Import Approx Eng Controller libraries
 import ThunderBorg3 as ThunderBorg
@@ -11,9 +10,7 @@ import UltraBorg3 as UltraBorg
 #import os
 import sys
 
-global launcher
 global TB
-launcher = False
 
 # Setup the ThunderBorg
 TB = ThunderBorg.ThunderBorg()
@@ -53,16 +50,15 @@ UB.Init()                       # Set the board up (checks the board is connecte
 UB.SetServoPosition4(-0.02) #Test Servo positioning using ultra_gui.py to obtain start position and insert here
 
 # Setup Nerf Launcher motor variable (BCM numbering system)
-global motors
-motors = LED(27) #, 22)
-#motor2 = Motor(23, 24)
+global launcher_motors
+global launcher_on
+launcher = LED(17) 
+launcher.value = 0 #ensure launcher motors are off
 
 def start_launcher_motors():
     print("Starting launcher Motors")
-    print("Press Circle to fire and Cross to stop")
-    motors.on()
-    #motor1.forward()
-    #motor2.forward()
+    print("Press X to fire and Cross to stop")
+    launcher.value = 0.33
 
 def fire():
     # Activate loading servo
@@ -74,13 +70,13 @@ def fire():
 
 def stop_launcher_motors():
     print("Stopping launcher Motors")
-    motors.off()
-    #motor1.stop()
-    #motor2.stop()
+    launcher.value = 0
 
 def main():
-    print("started main")
-    print("press square to start motors")
+    print("Drive using joystick")
+    print("Press square to start launcher motors")
+    print("Press Circle to stop launcher motors")
+    print("Press X to fire")
     while True:
         try:
             try:
@@ -103,22 +99,21 @@ def main():
                         if presses.square:
                             print("Square pressed")
                             # Start launcher motors
-
-                            launcher = "yes"
+                            launcher_on = "yes"
                             start_launcher_motors()
                             # Fire NERF
                             # Need to add some error checking here to prevent firing if motors are nut turning?
 
-                        elif presses.circle:
+                        elif presses.cross
                             print("Circle Pressed")
-                            if launcher == "yes":
+                            if launcher_on == "yes":
                                 fire()
                             else:
                                 print("Motors aren't running, press 'Square' to start")
 
-                        elif presses.cross:
+                        elif presses.circle:
                             # Stop launcher motors
-                            print("Cross pressed")
+                            print("Circle pressed")
                             launcher = "No"
                             stop_launcher_motors()
                 # Joystick disconnected.....
