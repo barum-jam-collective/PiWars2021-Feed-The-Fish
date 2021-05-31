@@ -1,6 +1,6 @@
-# Feed The Fish - Manual Control for driving and firing using DIY NERF launcher motors controlled using MOSFET and GPIOZero LED function
+# Feed The Fish - Manual Control for driving and firing using DIY NERF launcher motors controlled using MOSFET and GPIOZero PWMLED function
 # Bill Harvey 16 Feb 2021
-# Last update 18 May 2021
+# Last update 31 May 2021
 
 from gpiozero import PWMLED
 from time import sleep
