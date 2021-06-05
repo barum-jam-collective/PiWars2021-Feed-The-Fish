@@ -55,6 +55,33 @@ global launcher_on
 launcher = LED(17) 
 launcher.value = 0 #ensure launcher motors are off
 
+def set_speeds(power_left, power_right):
+    TB.SetMotor1(power_left/100)
+    TB.SetMotor2(power_right/100)
+
+def stop_motors():
+    TB.MotorsOff()
+
+def mixer(yaw, throttle, max_power=100):
+    """
+    Mix a pair of joystick axes, returning a pair of wheel speeds. This is where the mapping from
+    joystick positions to wheel powers is defined, so any changes to how the robot drives should
+    be made here, everything else is really just plumbing.
+    :param yaw:
+        Yaw axis value, ranges from -1.0 to 1.0
+    :param throttle:
+        Throttle axis value, ranges from -1.0 to 1.0
+    :param max_power:
+        Maximum speed that should be returned from the mixer, defaults to 100
+    :return:
+        A pair of power_left, power_right integer values to send to the motor driver
+    """
+
+    left = throttle - yaw # was +
+    right = throttle + yaw # was -
+    scale = float(max_power) / max(1, abs(left), abs(right))
+    return int(left * scale), int(right * scale)
+
 def start_launcher_motors():
     print("Starting launcher Motors")
     print("Press X to fire and Cross to stop")
@@ -73,7 +100,7 @@ def stop_launcher_motors():
     launcher.value = 0
 
 def main():
-    print("Drive using joystick")
+    print("Drive using left hand joystick")
     print("Press square to start launcher motors")
     print("Press Circle to stop launcher motors")
     print("Press X to fire")
@@ -84,15 +111,30 @@ def main():
                 with ControllerResource() as joystick:
                     print("Found a joystick and connected")
                     while joystick.connected:
-                        left_y = joystick["ly"]
-                        #print("Left Joy")
-                        right_y = joystick["ry"]
-                        #print("Right Joy")
-                        driveLeft = left_y
-                        driveRight = right_y
+                        # Get joystick values from the left analogue stick
+                        x_axis, y_axis = joystick['lx', 'ly']
 
-                        TB.SetMotor1(driveRight)
-                        TB.SetMotor2(driveLeft)
+                        # Get power from mixer function
+                        power_left, power_right = mixer(yaw=x_axis, throttle=y_axis)
+
+                        # Set motor speeds
+                        set_speeds(power_left, power_right)
+                        
+                        # Get a ButtonPresses object containing everything that was pressed since the last iteration of the loop
+                        joystick.check_presses()
+                        # Print any buttons that were pressed
+                        if joystick.has_presses:
+                            print(joystick.presses)
+                        
+                        #left_y = joystick["ly"]
+                        #print("Left Joy")
+                        #right_y = joystick["ry"]
+                        #print("Right Joy")
+                        #driveLeft = left_y
+                        #driveRight = right_y
+
+                        #TB.SetMotor1(driveRight)
+                        #TB.SetMotor2(driveLeft)
 
                         # Read the buttons to determine Nerf launcher controls
                         presses = joystick.check_presses()
