@@ -2,7 +2,7 @@
 # Bill Harvey 16 Feb 2021
 # Last update 31 May 2021
 
-from gpiozero import PWMLED
+from gpiozero import PWMLED, Servo
 from time import sleep
 from approxeng.input.selectbinder import ControllerResource # Import Approx Eng Controller libraries
 import ThunderBorg3 as ThunderBorg
@@ -52,8 +52,17 @@ UB.SetServoPosition4(-0.02) #Test Servo positioning using ultra_gui.py to obtain
 # Setup Nerf Launcher motor variable (BCM numbering system)
 global launcher_motors
 global launcher_on
-launcher = LED(17) 
+
+# Setup the launcher motor settings
+launcher = LED(17) # Assign GPIO pin 17 to control PWM for launcher motor 
 launcher.value = 0 #ensure launcher motors are off
+
+# Setup the launcher loading mechanism setting  
+breach = Servo(25) # Assign GPIO pin 25 to control breach block servo
+
+# Set min and max travel for breacj block servo
+global breach_min = -0.8
+global breach_max = 0.3
 
 def set_speeds(power_left, power_right):
     TB.SetMotor1(power_left/100)
@@ -89,11 +98,11 @@ def start_launcher_motors():
 
 def fire():
     # Activate loading servo
-    UB.SetServoPosition4(-0.02) #was Test Servo positioning using ultra_gui.py to obtain start position and insert here
+    UB.SetServoPosition4(breach_min) #was Test Servo positioning using ultra_gui.py to obtain start position and insert here
     sleep(0.5) # Insert loading time here
-    UB.SetServoPosition4(-0.55) #was -0.47 Test Servo positioning using ultra_gui.py to obtain loading position and insert here
+    UB.SetServoPosition4(breach_max) #was -0.47 Test Servo positioning using ultra_gui.py to obtain loading position and insert here
     sleep(0.5)
-    UB.SetServoPosition4(-0.02) #Test Servo positioning using ultra_gui.py to obtain start position and insert here
+    UB.SetServoPosition4(breach_min) #Test Servo positioning using ultra_gui.py to obtain start position and insert here
 
 def stop_launcher_motors():
     print("Stopping launcher Motors")
