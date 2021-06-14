@@ -1,12 +1,13 @@
 # Feed The Fish - Manual Control for driving and firing using DIY NERF launcher motors controlled using MOSFET and GPIOZero PWMLED function
 # Bill Harvey 16 Feb 2021
-# Last update 13 June 2021
+# Last update 14 June 2021
 
 # Current list of in use servos - identify max an min using ultra_gui.py
 # Servo 1 = fire breach mechanism PS4 Controller Crosses 'X' button
-# Servo 2 = Pan left and right - PS4 Controller Right Analogue y axis
-# Servo 3 = Tilt up and down (63 Max up, 0.44 max down) PS4 Controler Right analogue x axis
+# Servo 2 = Pan PS4 Controller Right Analogue y axis
+# Servo 3 = Tilt (63 Max up, 0.44 max down) PS4 Controler Right analogue x axis
 
+# Launcher motor speed control PS4 SHARE and OPTION buttons 'select' and 'start'
 
 from gpiozero import PWMLED, Servo
 from time import sleep
@@ -56,7 +57,6 @@ UB.Init()  # Set the board up (checks the board is connected)
 UB.SetServoPosition4(-0.02)  # Test Servo positioning using ultra_gui.py to obtain start position and insert here
 
 # Setup Nerf Launcher motor variable (BCM numbering system)
-global launcher_motors
 global launcher_on
 
 # Setup the launcher motor settings
@@ -79,7 +79,7 @@ def stop_motors():
     TB.MotorsOff()
 
 
-def mixer(yaw, throttle, max_power=50): # was 100, reduced to 50 to see if it helps control
+def mixer(yaw, throttle, max_power=50):
     """
     Mix a pair of joystick axes, returning a pair of wheel speeds. This is where the mapping from
     joystick positions to wheel powers is defined, so any changes to how the robot drives should
@@ -109,29 +109,26 @@ def aim_left_right(aim):
 def elevation_up_down(elevation):
     UB.SetServoPosition3(elevation)
 
-def start_launcher_motors(launcher_on):
-    print("Starting launcher Motors")
-    print("Press X to fire and Circle to stop")
-    launcher.value = 0.33
-    return launcher_on
+#def start_launcher_motors(launcher_speed, launcher_on):
+#    print("Starting launcher Motors")
+#    print("Press X to fire and Circle to stop")
+#    launcher.value = 0.33
+#    return launcher_on
 
 def fire():
     global breach_min
     global breach_max
     # Activate loading servo
-    UB.SetServoPosition4(
-        breach_min)  # was Test Servo positioning using ultra_gui.py to obtain start position and insert here
+    UB.SetServoPosition4(breach_min)  # was Test Servo positioning using ultra_gui.py to obtain start position and insert here
     sleep(0.5)  # Insert loading time here
-    UB.SetServoPosition4(
-        breach_max)  # was -0.47 Test Servo positioning using ultra_gui.py to obtain loading position and insert here
+    UB.SetServoPosition4(breach_max)  # was -0.47 Test Servo positioning using ultra_gui.py to obtain loading position and insert here
     sleep(0.5)
-    UB.SetServoPosition4(
-        breach_min)  # Test Servo positioning using ultra_gui.py to obtain start position and insert here
+    UB.SetServoPosition4(breach_min)  # Test Servo positioning using ultra_gui.py to obtain start position and insert here
 
 
-def stop_launcher_motors():
-    print("Stopping launcher Motors")
-    launcher.value = 0
+#def stop_launcher_motors():
+#    print("Stopping launcher Motors")
+#    launcher.value = 0
 
 
 def main():
@@ -140,6 +137,8 @@ def main():
     global launcher_on
     global aim
     global elevation
+    #global launcher_speed
+    global launcher
     aim = 0
     elevation = 0
     print("Drive using left hand joystick")
@@ -191,10 +190,24 @@ def main():
                         if presses.square:
                             print("Square pressed")
                             # Start launcher motors
+                            print("Starting launcher Motors")
+                            print("Press X to fire and Circle to stop")
                             launcher_on = "yes"
-                            start_launcher_motors(launcher_on)
-                            # Fire NERF
+                            launcher.value = 0.33 # default start speed
+
+                        if presses.select:
+                            launcher.value += 0.05
+
+                        if presses.start:
+                            launcher.value -= 0.05
+
+                            #start_launcher_motors(launcher_on, launcher_speed)
+
+
                             # Need to add some error checking here to prevent firing if motors are nut turning?
+
+
+                        # print("launcher speed = ", launcher_speed.value)
 
                         if presses.cross:
                             print("Firing")
@@ -209,7 +222,7 @@ def main():
                             # Stop launcher motors
                             print("Circle pressed")
                             launcher = "No"
-                            stop_launcher_motors()
+                            launcher.value = 0
 
                         # aiming
 
@@ -232,6 +245,7 @@ def main():
                             # Lower cannon
                             elevation -=0.05
                             elevation_up_down(elevation)
+                            
                 # Joystick disconnected.....
                 print("Connection to joystick lost")
                 stop_launcher_motors()
